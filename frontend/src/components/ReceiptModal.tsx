@@ -49,8 +49,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
               <h2 className="text-base font-extrabold tracking-wider uppercase">
                 CHATHURA PRINTERS
               </h2>
-              <p className="text-[11px] text-slate-600">Main Street, Colombo</p>
-              <p className="text-[11px] text-slate-600">Tel: 071-2345678</p>
+              <p className="text-[11px] text-slate-600">No. 6A, Sri Hemananda Mw, Joolgaha, Galle</p>
+              <p className="text-[11px] text-slate-600">Tel: 077 8683088 / 072 0129297</p>
               <div className="mt-2 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
                 *** CASH RECEIPT ***
               </div>

@@ -101,7 +101,7 @@ export const OpeningFloatModal: React.FC<OpeningFloatModalProps> = ({
               <input
                 type="number"
                 min="0"
-                step="50"
+                step="any"
                 required
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
