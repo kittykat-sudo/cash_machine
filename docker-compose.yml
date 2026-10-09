@@ -1,0 +1,84 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: chathura_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-cash_register}
+    ports:
+      - "${HOST_DB_PORT:-5433}:5432"
+    volumes:
+      - chathura_postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cash_register"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cash_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: chathura_redis
+    restart: unless-stopped
+    ports:
+      - "${HOST_REDIS_PORT:-6380}:6379"
+    volumes:
+      - chathura_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cash_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chathura_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cash_register}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-chathura-printers-super-secret-jwt-key-2026}
+      ALLOWED_ORIGINS: "*"
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Colombo}
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-LKR}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cash_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chathura_frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - cash_network
+
+volumes:
+  chathura_postgres_data:
+  chathura_redis_data:
+
+networks:
+  cash_network:
+    driver: bridge

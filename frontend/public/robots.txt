@@ -1,0 +1,3 @@
+# Chathura Printers POS
+User-agent: *
+Disallow: /
