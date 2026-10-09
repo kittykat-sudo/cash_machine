@@ -202,8 +202,8 @@ export const CashbookView: React.FC<CashbookViewProps> = ({ onBalanceUpdated }) 
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  step="50"
+                  min="0.01"
+                  step="any"
                   required
                   value={adjAmount}
                   onChange={(e) => setAdjAmount(parseFloat(e.target.value) || 0)}

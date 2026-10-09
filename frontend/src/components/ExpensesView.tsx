@@ -16,7 +16,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onExpenseAdded }) =>
 
   // Form State
   const [category, setCategory] = useState('paper');
-  const [amount, setAmount] = useState<number>(1500);
+  const [amount, setAmount] = useState<string>('');
   const [description, setDescription] = useState('');
   const [expenseDate, setExpenseDate] = useState<string>(
     new Date().toISOString().split('T')[0]
@@ -50,17 +50,19 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onExpenseAdded }) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (amount <= 0) return;
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return;
     try {
       setSubmitting(true);
       await createExpense({
         category,
-        amount,
+        amount: parsedAmount,
         description: description.trim() || undefined,
         expense_date: expenseDate,
       });
 
       setDescription('');
+      setAmount('');
       loadExpenses();
       onExpenseAdded();
     } catch (err: any) {
@@ -124,11 +126,12 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onExpenseAdded }) =>
             </label>
             <input
               type="number"
-              min="1"
-              step="10"
+              min="0.01"
+              step="any"
               required
+              placeholder="0.00"
               value={amount}
-              onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+              onChange={(e) => setAmount(e.target.value)}
               className="w-full px-3 py-2 border border-slate-300 rounded-xl text-base font-bold font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
@@ -149,7 +152,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({ onExpenseAdded }) =>
 
           <button
             type="submit"
-            disabled={submitting || amount <= 0}
+            disabled={submitting || !amount || parseFloat(amount) <= 0}
             className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />

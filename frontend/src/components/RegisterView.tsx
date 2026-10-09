@@ -500,7 +500,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSaleCompleted }) =
                   <input
                     type="number"
                     min="0"
-                    step="5"
+                    step="any"
                     value={customPrice}
                     onChange={(e) => setCustomPrice(parseFloat(e.target.value) || 0)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"

@@ -282,7 +282,7 @@ export const ItemsView: React.FC = () => {
                   <input
                     type="number"
                     min="0"
-                    step="0.5"
+                    step="any"
                     required
                     value={unitPrice}
                     onChange={(e) => setUnitPrice(parseFloat(e.target.value) || 0)}

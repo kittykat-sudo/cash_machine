@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     APP_TIMEZONE: str = os.getenv("APP_TIMEZONE", "Asia/Colombo")
     DEFAULT_CURRENCY: str = os.getenv("DEFAULT_CURRENCY", "LKR")
     SHOP_NAME: str = "Chathura Printers"
-    SHOP_PHONE: str = "071-2345678"
-    SHOP_ADDRESS: str = "Main Street, Colombo"
+    SHOP_PHONE: str = "077-8683088 / 072 0129297"
+    SHOP_ADDRESS: str = "No. 6A, Sri Hemananda Mw, Joolgaha, Galle"
 
     class Config:
         env_file = ".env"
