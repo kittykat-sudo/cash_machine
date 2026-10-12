@@ -13,6 +13,8 @@ import {
   Layers,
   PieChart,
   RefreshCw,
+  Landmark,
+  Target,
 } from 'lucide-react';
 
 export const ReportsView: React.FC = () => {
@@ -330,6 +332,84 @@ export const ReportsView: React.FC = () => {
                 Rs. {Number(monthlyData.net_profit).toFixed(2)}
               </div>
               <div className="text-xs text-slate-500 mt-1">Retained Earnings</div>
+            </div>
+          </div>
+
+          {/* Owner Loan & Month-End Break-Even Progress Panel */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-100 text-blue-700">
+                  <Landmark className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">
+                    Loan Installment & Month-End Break-Even Progress
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Target: Rs. 400,000 / month to cover Rs. 92,500 fixed overhead + Rs. 67,350 bank loan installment
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-600">Break-Even Progress:</span>
+                <span className="font-mono font-bold text-sm text-slate-900">
+                  {Math.round((Number(monthlyData.total_sales) / 400000) * 100)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  Number(monthlyData.total_sales) >= 400000
+                    ? 'bg-emerald-500'
+                    : 'bg-blue-600'
+                }`}
+                style={{
+                  width: `${Math.min(100, Math.max(0, (Number(monthlyData.total_sales) / 400000) * 100))}%`,
+                }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block">Fixed Overhead</span>
+                <span className="font-mono font-bold text-slate-900 text-sm">Rs. 92,500.00</span>
+                <span className="text-[10px] text-slate-400 block">Manager + Bills (No rent)</span>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block">Loan Installment</span>
+                <span className="font-mono font-bold text-blue-700 text-sm">Rs. 67,350.00</span>
+                <span className="text-[10px] text-slate-400 block">5-yr 15.5% fixed loan</span>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block">Break-Even Target</span>
+                <span className="font-mono font-bold text-amber-700 text-sm">Rs. 400,000.00</span>
+                <span className="text-[10px] text-slate-400 block">~Rs. 15,385 / day</span>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block">Projected Month-End Reinvestment</span>
+                <span
+                  className={`font-mono font-black text-sm ${
+                    Number(monthlyData.total_sales) * 0.4 - 92500 - 67350 >= 0
+                      ? 'text-emerald-700'
+                      : 'text-rose-600'
+                  }`}
+                >
+                  {Number(monthlyData.total_sales) * 0.4 - 92500 - 67350 >= 0 ? '+' : ''}
+                  Rs. {(Number(monthlyData.total_sales) * 0.4 - 92500 - 67350).toLocaleString('en-LK', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+                <span className="text-[10px] text-slate-400 block">Based on 40% margin model</span>
+              </div>
             </div>
           </div>
 

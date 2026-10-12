@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { ShoppingCart, BookOpen, Receipt, BarChart3, Settings2, Wallet } from 'lucide-react';
+import { ShoppingCart, BookOpen, Receipt, BarChart3, Settings2, Wallet, Landmark } from 'lucide-react';
 
 interface NavbarProps {
-  activeTab: 'register' | 'cashbook' | 'expenses' | 'reports' | 'items';
-  setActiveTab: (tab: 'register' | 'cashbook' | 'expenses' | 'reports' | 'items') => void;
+  activeTab: 'register' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan';
+  setActiveTab: (tab: 'register' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan') => void;
   cashBalance: number;
   cashierName: string;
   hasOpeningFloat: boolean;
@@ -26,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'expenses', label: 'Expenses', icon: Receipt },
     { id: 'reports', label: 'Day Summary & Profit', icon: BarChart3 },
     { id: 'items', label: 'Price List', icon: Settings2 },
+    { id: 'businessPlan', label: 'Loan & Month-End', icon: Landmark },
   ] as const;
 
   return (
