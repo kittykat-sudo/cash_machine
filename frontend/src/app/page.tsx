@@ -7,12 +7,13 @@ import { CashbookView } from '../components/CashbookView';
 import { ExpensesView } from '../components/ExpensesView';
 import { ReportsView } from '../components/ReportsView';
 import { ItemsView } from '../components/ItemsView';
+import { BusinessPlanView } from '../components/BusinessPlanView';
 import { OpeningFloatModal } from '../components/OpeningFloatModal';
 import { fetchCashBalance } from '../services/api';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<
-    'register' | 'cashbook' | 'expenses' | 'reports' | 'items'
+    'register' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan'
   >('register');
   const [cashBalance, setCashBalance] = useState<number>(0);
   const [hasOpeningFloat, setHasOpeningFloat] = useState<boolean>(true);
@@ -62,6 +63,7 @@ export default function Home() {
         )}
         {activeTab === 'reports' && <ReportsView />}
         {activeTab === 'items' && <ItemsView />}
+        {activeTab === 'businessPlan' && <BusinessPlanView />}
       </main>
 
       <OpeningFloatModal

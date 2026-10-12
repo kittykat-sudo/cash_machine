@@ -74,24 +74,24 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
 
             {/* Line Items */}
             <div className="py-3 border-b border-dashed border-slate-400">
-              <table className="w-full text-left">
+              <table className="w-full text-left table-fixed">
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] uppercase text-slate-500">
-                    <th className="pb-1">Item</th>
-                    <th className="pb-1 text-center">Qty</th>
-                    <th className="pb-1 text-right">Price</th>
-                    <th className="pb-1 text-right">Total</th>
+                    <th className="pb-1 w-[46%] text-left">Item</th>
+                    <th className="pb-1 w-[14%] text-center">Qty</th>
+                    <th className="pb-1 w-[20%] text-right">Price</th>
+                    <th className="pb-1 w-[20%] text-right">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {sale.items.map((item, idx) => (
-                    <tr key={idx} className="py-1">
-                      <td className="py-1 pr-1 font-sans text-[11px] font-medium leading-tight">
+                    <tr key={idx} className="py-1 align-top">
+                      <td className="py-1 pr-1 font-sans text-[11px] font-medium leading-tight break-words">
                         {item.description}
                       </td>
-                      <td className="py-1 text-center">{Number(item.quantity)}</td>
-                      <td className="py-1 text-right">{Number(item.unit_price).toFixed(2)}</td>
-                      <td className="py-1 text-right font-semibold">
+                      <td className="py-1 text-center whitespace-nowrap">{Number(item.quantity)}</td>
+                      <td className="py-1 text-right whitespace-nowrap">{Number(item.unit_price).toFixed(2)}</td>
+                      <td className="py-1 text-right font-semibold whitespace-nowrap">
                         {Number(item.line_total).toFixed(2)}
                       </td>
                     </tr>
@@ -104,23 +104,23 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
             <div className="py-3 border-b border-dashed border-slate-400 space-y-1 text-right">
               <div className="flex justify-between text-slate-600 text-[11px]">
                 <span>Subtotal:</span>
-                <span>Rs. {Number(sale.subtotal).toFixed(2)}</span>
+                <span className="whitespace-nowrap">Rs. {Number(sale.subtotal).toFixed(2)}</span>
               </div>
               {Number(sale.discount) > 0 && (
                 <div className="flex justify-between text-emerald-600 text-[11px]">
                   <span>Discount:</span>
-                  <span>- Rs. {Number(sale.discount).toFixed(2)}</span>
+                  <span className="whitespace-nowrap">- Rs. {Number(sale.discount).toFixed(2)}</span>
                 </div>
               )}
               {Number(sale.tax_amount) > 0 && (
                 <div className="flex justify-between text-slate-600 text-[11px]">
                   <span>Tax:</span>
-                  <span>Rs. {Number(sale.tax_amount).toFixed(2)}</span>
+                  <span className="whitespace-nowrap">Rs. {Number(sale.tax_amount).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm font-black pt-1 border-t border-slate-300 text-slate-900">
                 <span>NET TOTAL:</span>
-                <span>Rs. {Number(sale.total).toFixed(2)}</span>
+                <span className="whitespace-nowrap">Rs. {Number(sale.total).toFixed(2)}</span>
               </div>
             </div>
 
@@ -130,6 +130,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
               <p>Please retain receipt for exchanges within 7 days.</p>
               <p className="tracking-widest">--- • ---</p>
             </div>
+
+            {/* Bottom feed spacer: gives physical distance so the auto-cutter cuts after the footer */}
+            <div className="h-4 print:h-8" aria-hidden="true" />
           </div>
         </div>
 

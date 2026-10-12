@@ -29,8 +29,38 @@ body {
   background: #94a3b8;
 }
 
-/* Thermal receipt & A4 bill printing media queries */
+/* Thermal receipt & 80mm POS bill printing media queries */
+@page {
+  size: 80mm auto;
+  margin: 0mm;
+}
+
 @media print {
+  html,
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Reset modal backdrop & scroll clipping */
+  .fixed,
+  .overflow-hidden,
+  .overflow-y-auto {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
   body * {
     visibility: hidden;
   }
@@ -44,17 +74,31 @@ body {
     position: absolute;
     left: 0;
     top: 0;
-    width: 80mm;
-    margin: 0 auto;
-    padding: 2mm;
-    background: white;
-    color: black;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 12px;
-    line-height: 1.25;
+    /* 80mm physical roll has ~72mm active thermal head width */
+    width: 76mm !important;
+    max-width: 76mm !important;
+    margin: 0 auto !important;
+    /* 24mm bottom clearance ensures YHDAA auto-cutter doesn't slice through footer text */
+    padding: 2mm 2mm 24mm 2mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Force 100% crisp black text and borders (prevents faint/dithered gray thermal output) */
+  #printable-receipt * {
+    color: #000000 !important;
+    border-color: #000000 !important;
+    text-shadow: none !important;
   }
 
   .no-print {
     display: none !important;
   }
 }
+
