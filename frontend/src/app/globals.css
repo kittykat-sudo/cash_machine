@@ -29,10 +29,17 @@ body {
   background: #94a3b8;
 }
 
-/* Thermal receipt & 80mm POS bill printing media queries */
-@page {
-  size: 80mm auto;
-  margin: 0mm;
+/* Thermal receipt printing.
+   The print copy lives in #print-root (portal on <body>). On screen it is parked
+   off-canvas (so its real height can be measured); when printing, everything else
+   is removed from layout so only ONE receipt-sized page is produced.
+   The exact @page size is injected per bill by ReceiptModal.tsx. */
+#print-root {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 @media print {
@@ -41,64 +48,40 @@ body {
     background: #ffffff !important;
     margin: 0 !important;
     padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /* Reset modal backdrop & scroll clipping */
-  .fixed,
-  .overflow-hidden,
-  .overflow-y-auto {
-    position: static !important;
-    overflow: visible !important;
-    height: auto !important;
-    max-height: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
+  body > *:not(#print-root) {
+    display: none !important;
   }
 
-  body * {
-    visibility: hidden;
+  #print-root {
+    position: static !important;
+    visibility: visible !important;
+    left: auto !important;
   }
 
   #printable-receipt,
   #printable-receipt * {
-    visibility: visible;
-  }
-
-  #printable-receipt {
-    position: absolute;
-    left: 0;
-    top: 0;
-    /* 80mm physical roll has ~72mm active thermal head width */
-    width: 76mm !important;
-    max-width: 76mm !important;
-    margin: 0 auto !important;
-    /* 24mm bottom clearance ensures YHDAA auto-cutter doesn't slice through footer text */
-    padding: 2mm 2mm 24mm 2mm !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    box-shadow: none !important;
-    border: none !important;
-    border-radius: 0 !important;
-    font-family: 'Courier New', Courier, monospace !important;
-    font-size: 12px !important;
-    line-height: 1.25 !important;
-  }
-
-  /* Force 100% crisp black text and borders (prevents faint/dithered gray thermal output) */
-  #printable-receipt * {
     color: #000000 !important;
     border-color: #000000 !important;
     text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  #printable-receipt {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    page-break-after: avoid;
   }
 
   .no-print {
     display: none !important;
   }
 }
+
 
