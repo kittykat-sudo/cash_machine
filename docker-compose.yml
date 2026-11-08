@@ -37,6 +37,7 @@ services:
       - cash_network
 
   backend:
+    platform: linux/amd64
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -49,6 +50,18 @@ services:
       ALLOWED_ORIGINS: "*"
       APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Colombo}
       DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-LKR}
+      SHOP_NAME: "Chathura Printers"
+      SHOP_PHONE: ${SHOP_PHONE:-072 0129297 / 077-8683088}
+      SHOP_WHATSAPP_NUMBER: ${SHOP_WHATSAPP_NUMBER:-0720129297}
+      SHOP_ADDRESS: "No. 6A, Sri Hemananda Mw, Joolgaha, Galle"
+      WHATSAPP_MODE: ${WHATSAPP_MODE:-click_to_chat}
+      WHATSAPP_DEFAULT_COUNTRY_CODE: ${WHATSAPP_DEFAULT_COUNTRY_CODE:-94}
+      WHATSAPP_API_TOKEN: ${WHATSAPP_API_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_WHATSAPP_NUMBER: ${TWILIO_WHATSAPP_NUMBER:-}
+      WHATSAPP_BRIDGE_URL: ${WHATSAPP_BRIDGE_URL:-http://whatsapp-bridge:3001}
     ports:
       - "8000:8000"
     depends_on:
@@ -59,7 +72,26 @@ services:
     networks:
       - cash_network
 
+  whatsapp-bridge:
+    platform: linux/amd64
+    build:
+      context: ./whatsapp-bridge
+      dockerfile: Dockerfile
+    container_name: chathura_whatsapp_bridge
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      AUTH_DIR: /app/auth_info_baileys
+      SHOP_WHATSAPP_NUMBER: ${SHOP_WHATSAPP_NUMBER:-0720129297}
+    ports:
+      - "3001:3001"
+    volumes:
+      - chathura_whatsapp_auth:/app/auth_info_baileys
+    networks:
+      - cash_network
+
   frontend:
+    platform: linux/amd64
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -78,6 +110,7 @@ services:
 volumes:
   chathura_postgres_data:
   chathura_redis_data:
+  chathura_whatsapp_auth:
 
 networks:
   cash_network:

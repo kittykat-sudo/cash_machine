@@ -2,12 +2,16 @@ import {
   Item,
   CartItem,
   PaymentMethod,
+  OrderStatus,
   Sale,
   Expense,
   CashbookEntry,
   CashBalanceResponse,
   DailyReport,
   MonthlyReport,
+  WhatsAppSendPayload,
+  WhatsAppSendResponse,
+  WhatsAppConfig,
 } from '../types';
 
 const API_BASE = '/api';
@@ -55,6 +59,10 @@ export interface CreateSalePayload {
   tax_amount: number;
   payment_method: PaymentMethod;
   cashier_id?: number | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  order_status?: OrderStatus;
+  notes?: string | null;
 }
 
 export async function createSale(payload: CreateSalePayload): Promise<Sale> {
@@ -70,11 +78,123 @@ export async function createSale(payload: CreateSalePayload): Promise<Sale> {
   return res.json();
 }
 
-export async function fetchSales(date?: string): Promise<Sale[]> {
+export interface FetchSalesParams {
+  date?: string;
+  month?: string;
+  start_date?: string;
+  end_date?: string;
+  search?: string;
+  status?: string;
+  limit?: number;
+}
+
+export async function fetchSales(filter?: string | FetchSalesParams): Promise<Sale[]> {
   const url = new URL(`${API_BASE}/sales`, window.location.origin);
-  if (date) url.searchParams.append('date', date);
+  if (typeof filter === 'string') {
+    if (filter) url.searchParams.append('date', filter);
+  } else if (filter) {
+    if (filter.date) url.searchParams.append('date', filter.date);
+    if (filter.month) url.searchParams.append('month', filter.month);
+    if (filter.start_date) url.searchParams.append('start_date', filter.start_date);
+    if (filter.end_date) url.searchParams.append('end_date', filter.end_date);
+    if (filter.search) url.searchParams.append('search', filter.search);
+    if (filter.status) url.searchParams.append('status', filter.status);
+    if (filter.limit) url.searchParams.append('limit', filter.limit.toString());
+  }
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error('Failed to fetch sales');
+  return res.json();
+}
+
+export async function updateSaleStatus(id: number | string, newStatus: OrderStatus): Promise<Sale> {
+  const res = await fetch(`${API_BASE}/sales/${id}/status?new_status=${encodeURIComponent(newStatus)}`, {
+    method: 'PATCH',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to update order status' }));
+    throw new Error(err.detail || 'Failed to update order status');
+  }
+  return res.json();
+}
+
+export async function updateSale(id: number | string, data: Partial<Sale>): Promise<Sale> {
+  const res = await fetch(`${API_BASE}/sales/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to update sale' }));
+    throw new Error(err.detail || 'Failed to update sale');
+  }
+  return res.json();
+}
+
+export async function sendSaleWhatsApp(
+  id: number | string,
+  payload: WhatsAppSendPayload
+): Promise<WhatsAppSendResponse> {
+  const res = await fetch(`${API_BASE}/sales/${id}/whatsapp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to generate WhatsApp message' }));
+    throw new Error(err.detail || 'Failed to generate WhatsApp message');
+  }
+  return res.json();
+}
+
+export async function fetchWhatsAppConfig(): Promise<WhatsAppConfig> {
+  const res = await fetch(`${API_BASE}/whatsapp/config`);
+  if (!res.ok) throw new Error('Failed to fetch WhatsApp configuration');
+  return res.json();
+}
+
+export async function fetchWhatsAppStatus(): Promise<any> {
+  const res = await fetch(`${API_BASE}/whatsapp/status`);
+  if (!res.ok) throw new Error('Failed to fetch WhatsApp status');
+  return res.json();
+}
+
+export async function requestWhatsAppPairingCode(phone?: string): Promise<{
+  success: boolean;
+  phone?: string;
+  pairingCode?: string;
+  alreadyConnected?: boolean;
+  message?: string;
+}> {
+  const res = await fetch(`${API_BASE}/whatsapp/pairing-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to request pairing code' }));
+    throw new Error(err.detail || 'Failed to request pairing code');
+  }
+  return res.json();
+}
+
+export async function sendDirectWhatsApp(phone: string, message: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/whatsapp/send-direct`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, message }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to send WhatsApp message' }));
+    throw new Error(err.detail || 'Failed to send WhatsApp message');
+  }
+  return res.json();
+}
+
+export async function logoutWhatsApp(): Promise<any> {
+  const res = await fetch(`${API_BASE}/whatsapp/logout`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to disconnect WhatsApp');
   return res.json();
 }
 

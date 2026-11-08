@@ -26,9 +26,15 @@ export interface CartItem {
 
 export type PaymentMethod = 'cash' | 'card' | 'bank';
 
+export type OrderStatus = 'pending' | 'in_progress' | 'ready' | 'completed' | 'cancelled';
+
 export interface Sale {
   id: number;
   bill_number: string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  order_status: OrderStatus;
+  notes?: string | null;
   cashier_id?: number | null;
   subtotal: number | string;
   discount: number | string;
@@ -43,7 +49,49 @@ export interface Sale {
     quantity: number | string;
     unit_price: number | string;
     line_total: number | string;
+    category?: string | null;
   }[];
+}
+
+export interface WhatsAppSendPayload {
+  message_type: 'bill' | 'status' | 'custom';
+  status?: OrderStatus;
+  phone?: string;
+  custom_message?: string;
+  send_direct?: boolean;
+}
+
+export interface WhatsAppSendResponse {
+  success: boolean;
+  phone: string;
+  message: string;
+  wa_link: string;
+  sent_via_api: boolean;
+  details?: string | null;
+}
+
+export interface WhatsAppBridgeStatus {
+  available: boolean;
+  connected: boolean;
+  phone?: string | null;
+  target_shop_phone?: string | null;
+  qr?: string | null;
+  qr_raw?: string | null;
+  pairing_code?: string | null;
+  error?: string | null;
+}
+
+export interface WhatsAppConfig {
+  mode: string;
+  default_country_code: string;
+  shop_name: string;
+  shop_phone: string;
+  shop_whatsapp_number?: string;
+  has_meta_cloud: boolean;
+  has_twilio: boolean;
+  is_api_configured: boolean;
+  is_connected?: boolean;
+  bridge?: WhatsAppBridgeStatus;
 }
 
 export interface Expense {

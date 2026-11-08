@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DailyReport, MonthlyReport } from '../types';
 import { fetchDailyReport, fetchMonthlyReport } from '../services/api';
+import { RevenueView } from './RevenueView';
 import {
   TrendingUp,
   TrendingDown,
@@ -15,9 +16,20 @@ import {
   RefreshCw,
   Landmark,
   Target,
+  BarChart3,
+  ArrowRight,
 } from 'lucide-react';
 
-export const ReportsView: React.FC = () => {
+interface ReportsViewProps {
+  onNavigate?: (tab: 'register' | 'orders' | 'revenue' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan') => void;
+  initialSubTab?: 'summary' | 'revenue';
+}
+
+export const ReportsView: React.FC<ReportsViewProps> = ({
+  onNavigate,
+  initialSubTab = 'summary',
+}) => {
+  const [subTab, setSubTab] = useState<'summary' | 'revenue'>(initialSubTab);
   const [mode, setMode] = useState<'daily' | 'monthly'>('daily');
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
@@ -126,41 +138,89 @@ export const ReportsView: React.FC = () => {
         </div>
       </div>
 
-      {loading ? (
+      {/* Sub-tab Navigation */}
+      <div className="flex border-b border-slate-200 gap-2">
+        <button
+          onClick={() => setSubTab('summary')}
+          className={`flex items-center gap-2 px-4 py-2.5 font-bold text-sm border-b-2 transition -mb-px ${
+            subTab === 'summary'
+              ? 'border-emerald-600 text-emerald-800 bg-white rounded-t-xl shadow-sm'
+              : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" />
+          <span>Day Summary & Audit</span>
+        </button>
+        <button
+          onClick={() => setSubTab('revenue')}
+          className={`flex items-center gap-2 px-4 py-2.5 font-bold text-sm border-b-2 transition -mb-px ${
+            subTab === 'revenue'
+              ? 'border-emerald-600 text-emerald-800 bg-white rounded-t-xl shadow-sm'
+              : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4 text-emerald-600" />
+          <span>Revenue Breakdown (Sales)</span>
+        </button>
+      </div>
+
+      {subTab === 'revenue' ? (
+        <RevenueView
+          embedded={true}
+          initialMode={mode}
+          initialDate={selectedDate}
+          initialMonth={selectedMonth}
+          onNavigate={onNavigate}
+        />
+      ) : loading ? (
         <div className="p-12 text-center text-slate-400 font-medium">Loading report metrics...</div>
       ) : mode === 'daily' && dailyData ? (
         <div className="space-y-6">
           {/* Top KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Sales Revenue */}
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div
+              onClick={() => setSubTab('revenue')}
+              className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group"
+              title="Click to view itemized revenue breakdown"
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold uppercase text-slate-400">Total Sales</span>
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition">
                   <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
               <div className="text-2xl font-black text-slate-900 font-mono">
                 Rs. {Number(dailyData.total_sales).toFixed(2)}
               </div>
-              <div className="text-xs text-slate-500 mt-1">
-                {dailyData.sales_count} bill(s) issued today
+              <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                <span>{dailyData.sales_count} bill(s) issued today</span>
+                <span className="text-[11px] font-semibold text-emerald-600 group-hover:translate-x-0.5 transition flex items-center gap-0.5">
+                  Breakdown &rarr;
+                </span>
               </div>
             </div>
 
             {/* Total Expenses */}
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div
+              onClick={() => onNavigate?.('expenses')}
+              className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-rose-400 hover:shadow-md transition-all cursor-pointer group"
+              title="Click to redirect into Expenses tab"
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold uppercase text-slate-400">Total Expenses</span>
-                <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition">
                   <TrendingDown className="w-4 h-4" />
                 </div>
               </div>
               <div className="text-2xl font-black text-rose-600 font-mono">
                 Rs. {Number(dailyData.total_expenses).toFixed(2)}
               </div>
-              <div className="text-xs text-slate-500 mt-1">
-                {dailyData.expenses_count} expense record(s)
+              <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                <span>{dailyData.expenses_count} expense record(s)</span>
+                <span className="text-[11px] font-semibold text-rose-600 group-hover:translate-x-0.5 transition flex items-center gap-0.5">
+                  Expenses Tab &rarr;
+                </span>
               </div>
             </div>
 
@@ -300,20 +360,38 @@ export const ReportsView: React.FC = () => {
         <div className="space-y-6">
           {/* Monthly KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-              <span className="text-xs font-bold uppercase text-slate-400 block mb-1">
-                Monthly Revenue
-              </span>
+            <div
+              onClick={() => setSubTab('revenue')}
+              className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group"
+              title="Click to view how revenue was created"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold uppercase text-slate-400 block">
+                  Monthly Revenue
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded group-hover:bg-emerald-600 group-hover:text-white transition">
+                  View Breakdown &rarr;
+                </span>
+              </div>
               <div className="text-2xl font-black text-slate-900 font-mono">
                 Rs. {Number(monthlyData.total_sales).toFixed(2)}
               </div>
               <div className="text-xs text-slate-500 mt-1">{monthlyData.sales_count} bills</div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-              <span className="text-xs font-bold uppercase text-slate-400 block mb-1">
-                Monthly Expenses
-              </span>
+            <div
+              onClick={() => onNavigate?.('expenses')}
+              className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-rose-400 hover:shadow-md transition-all cursor-pointer group"
+              title="Click to redirect into Expenses tab"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold uppercase text-slate-400 block">
+                  Monthly Expenses
+                </span>
+                <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded group-hover:bg-rose-600 group-hover:text-white transition">
+                  Expenses Tab &rarr;
+                </span>
+              </div>
               <div className="text-2xl font-black text-rose-600 font-mono">
                 Rs. {Number(monthlyData.total_expenses).toFixed(2)}
               </div>
@@ -417,13 +495,26 @@ export const ReportsView: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Sales by Service Category */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h3 className="font-bold text-base text-slate-900 mb-4">Sales by Category</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-base text-slate-900">Sales by Category</h3>
+                <button
+                  onClick={() => setSubTab('revenue')}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline flex items-center gap-1"
+                >
+                  <span>Revenue Breakdown &rarr;</span>
+                </button>
+              </div>
               {Object.keys(monthlyData.category_breakdown).length === 0 ? (
                 <p className="text-xs text-slate-400">No category sales data for this month.</p>
               ) : (
                 <div className="space-y-3">
                   {Object.entries(monthlyData.category_breakdown).map(([cat, amount]) => (
-                    <div key={cat} className="flex justify-between items-center text-sm">
+                    <div
+                      key={cat}
+                      onClick={() => setSubTab('revenue')}
+                      className="flex justify-between items-center text-sm p-1.5 -mx-1.5 rounded-lg hover:bg-emerald-50/60 cursor-pointer transition"
+                      title="Click to view in Revenue Breakdown"
+                    >
                       <span className="capitalize font-medium text-slate-700">{cat}</span>
                       <span className="font-mono font-bold text-slate-900">
                         Rs. {amount.toFixed(2)}
@@ -436,13 +527,28 @@ export const ReportsView: React.FC = () => {
 
             {/* Expenses by Category */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h3 className="font-bold text-base text-slate-900 mb-4">Expenses by Category</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-base text-slate-900">Expenses by Category</h3>
+                {onNavigate && (
+                  <button
+                    onClick={() => onNavigate('expenses')}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1"
+                  >
+                    <span>Expenses Tab &rarr;</span>
+                  </button>
+                )}
+              </div>
               {Object.keys(monthlyData.expense_breakdown).length === 0 ? (
                 <p className="text-xs text-slate-400">No expense records for this month.</p>
               ) : (
                 <div className="space-y-3">
                   {Object.entries(monthlyData.expense_breakdown).map(([cat, amount]) => (
-                    <div key={cat} className="flex justify-between items-center text-sm">
+                    <div
+                      key={cat}
+                      onClick={() => onNavigate?.('expenses')}
+                      className="flex justify-between items-center text-sm p-1.5 -mx-1.5 rounded-lg hover:bg-rose-50/60 cursor-pointer transition"
+                      title="Click to redirect into Expenses Tab"
+                    >
                       <span className="capitalize font-medium text-slate-700">{cat}</span>
                       <span className="font-mono font-bold text-rose-600">
                         Rs. {amount.toFixed(2)}

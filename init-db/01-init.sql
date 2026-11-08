@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS sales (
   id SERIAL PRIMARY KEY,
   bill_number TEXT UNIQUE NOT NULL,
   cashier_id INTEGER REFERENCES users(id),
+  customer_name TEXT,
+  customer_phone TEXT,                    -- WhatsApp / Mobile number
+  order_status TEXT NOT NULL DEFAULT 'completed', -- 'pending' | 'in_progress' | 'ready' | 'completed' | 'cancelled'
+  notes TEXT,                             -- Job notes / instructions
   subtotal NUMERIC(12,2) NOT NULL,
   discount NUMERIC(12,2) NOT NULL DEFAULT 0,
   tax_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
@@ -108,4 +112,3 @@ INSERT INTO items (name, category, unit, unit_price, barcode, is_active) VALUES
 ON CONFLICT DO NOTHING;
 
 -- Note: Opening cash drawer float is entered by the cashier in the morning via POS UI.
-

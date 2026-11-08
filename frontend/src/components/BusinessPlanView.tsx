@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { FundingAgreementsView } from './FundingAgreementsView';
 import {
   Landmark,
   Calculator,
@@ -26,6 +27,13 @@ import {
   Printer,
   Sparkles,
   RefreshCcw,
+  FileText,
+  Coins,
+  Briefcase,
+  Percent,
+  CalendarCheck,
+  Check,
+  Award,
 } from 'lucide-react';
 
 interface CustomExpense {
@@ -35,6 +43,23 @@ interface CustomExpense {
 }
 
 export const BusinessPlanView: React.FC = () => {
+  // -------------------------------------------------------------
+  // 0. SUB-NAVIGATION & SECURED FUNDING STATE
+  // -------------------------------------------------------------
+  const [activePlanTab, setActivePlanTab] = useState<'funding' | 'agreements' | 'sensitivity'>('funding');
+  const [useSecuredLoans, setUseSecuredLoans] = useState<boolean>(true);
+  const [simulatedNetProfit, setSimulatedNetProfit] = useState<number>(150000);
+
+  // Secured Funding Constants
+  const SILVA_LOAN = 600000;
+  const SILVA_MONTHLY = 50000;
+  const CMM_LOAN = 400000;
+  const CMM_MONTHLY = 20000;
+  const SECURED_LOANS_MONTHLY = SILVA_MONTHLY + CMM_MONTHLY; // Rs. 70,000 / month
+  const INVESTOR_EQUITY = 1000000;
+  const FOUNDER_EQUITY = 700000; // 3 + 4 Lakhs
+  const TOTAL_CAPITAL_RAISED = SILVA_LOAN + CMM_LOAN + INVESTOR_EQUITY + FOUNDER_EQUITY; // 2,700,000 (27 Lakhs)
+
   // -------------------------------------------------------------
   // 1. LOAN PARAMETERS (Starts EMPTY by default as requested)
   // -------------------------------------------------------------
@@ -84,22 +109,22 @@ export const BusinessPlanView: React.FC = () => {
   const totalMonths = loanYears * 12;
   const monthlyRate = rateNum / 100 / 12;
 
-  // Loan Math (Only active when principal > 0)
-  const isLoanActive = principalNum > 0;
+  // Bank Loan Math (for optional bank simulation)
+  const isBankLoanActive = principalNum > 0;
   const calculatedReducingEmi =
-    isLoanActive && monthlyRate > 0 && totalMonths > 0
+    isBankLoanActive && monthlyRate > 0 && totalMonths > 0
       ? (principalNum * monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) /
         (Math.pow(1 + monthlyRate, totalMonths) - 1)
       : 0;
-  const month1Interest = isLoanActive ? principalNum * monthlyRate : 0;
+  const month1Interest = isBankLoanActive ? principalNum * monthlyRate : 0;
   const totalRepaymentReducing = calculatedReducingEmi * totalMonths;
-  const totalInterestReducing = isLoanActive ? totalRepaymentReducing - principalNum : 0;
+  const totalInterestReducing = isBankLoanActive ? totalRepaymentReducing - principalNum : 0;
 
   // Flat Rate alternative
-  const totalFlatInterest = isLoanActive ? principalNum * (rateNum / 100) * loanYears : 0;
-  const totalRepaymentFlat = isLoanActive ? principalNum + totalFlatInterest : 0;
-  const flatMonthlyInstallment = isLoanActive && totalMonths > 0 ? totalRepaymentFlat / totalMonths : 0;
-  const flatMonthlyInterest = isLoanActive && totalMonths > 0 ? totalFlatInterest / totalMonths : 0;
+  const totalFlatInterest = isBankLoanActive ? principalNum * (rateNum / 100) * loanYears : 0;
+  const totalRepaymentFlat = isBankLoanActive ? principalNum + totalFlatInterest : 0;
+  const flatMonthlyInstallment = isBankLoanActive && totalMonths > 0 ? totalRepaymentFlat / totalMonths : 0;
+  const flatMonthlyInterest = isBankLoanActive && totalMonths > 0 ? totalFlatInterest / totalMonths : 0;
 
   const calculatedMonthlyInstallment =
     calcModel === 'reducing' ? calculatedReducingEmi : flatMonthlyInstallment;
@@ -112,8 +137,13 @@ export const BusinessPlanView: React.FC = () => {
   const emiVariance = bankEmiNum > 0 ? bankEmiNum - calculatedMonthlyInstallment : 0;
   const isEmiMatched = bankEmiNum > 0 && Math.abs(emiVariance) <= 15;
 
-  // Active Loan Installment: Bank quote if provided, else calculated, or 0 if no loan
-  const activeInstallment = bankEmiNum > 0 ? bankEmiNum : calculatedMonthlyInstallment;
+  // Active Loan Installment:
+  // If useSecuredLoans is active (default), we service the Rs. 70,000/mo 0% interest friendly loans!
+  // Otherwise, fallback to bank quote or calculated commercial bank loan.
+  const isLoanActive = useSecuredLoans || isBankLoanActive;
+  const activeInstallment = useSecuredLoans
+    ? SECURED_LOANS_MONTHLY
+    : (bankEmiNum > 0 ? bankEmiNum : calculatedMonthlyInstallment);
 
   // Direct Costs Math
   const paperNum = parseFloat(paperCost) || 0;
@@ -343,10 +373,495 @@ export const BusinessPlanView: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Loan Installment */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+      {/* Sub Navigation Tabs */}
+      <div className="flex bg-slate-200/80 p-1.5 rounded-2xl gap-1 text-xs font-bold shadow-inner">
+        <button
+          onClick={() => setActivePlanTab('funding')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition ${
+            activePlanTab === 'funding'
+              ? 'bg-white text-emerald-800 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Building2 className="w-4 h-4 text-emerald-600" />
+          <span>Secured Funding & Capital Structure (27 Lakhs)</span>
+        </button>
+
+        <button
+          onClick={() => setActivePlanTab('agreements')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition ${
+            activePlanTab === 'agreements'
+              ? 'bg-white text-emerald-800 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <FileText className="w-4 h-4 text-blue-600" />
+          <span>Legal Agreements & Signatures (3 Contracts)</span>
+        </button>
+
+        <button
+          onClick={() => setActivePlanTab('sensitivity')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition ${
+            activePlanTab === 'sensitivity'
+              ? 'bg-white text-emerald-800 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Sliders className="w-4 h-4 text-purple-600" />
+          <span>Monthly Cash Flow, Costs & Break-Even</span>
+        </button>
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 1: SECURED FUNDING & CAPITAL STRUCTURE */}
+      {/* ------------------------------------------------------------- */}
+      {activePlanTab === 'funding' && (
+        <div className="space-y-6">
+          {/* Top 4 KPI Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Capital */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-slate-400">Total Capital Raised</span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Coins className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900 font-mono">
+                Rs. {TOTAL_CAPITAL_RAISED.toLocaleString()}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">
+                27 Lakhs (10L Loans + 10L Investor + 7L Founder)
+              </div>
+            </div>
+
+            {/* Monthly Debt Service */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-slate-400">Monthly Debt Service</span>
+                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                  <Landmark className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900 font-mono">
+                Rs. {SECURED_LOANS_MONTHLY.toLocaleString()}
+              </div>
+              <div className="text-xs text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> 0% Interest (50k Silva + 20k CMM)
+              </div>
+            </div>
+
+            {/* Gestation Grace Period */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-slate-400">Months 1–6 Gestation</span>
+                <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <CalendarCheck className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-slate-900 font-mono">
+                Rs. 0 Dividend
+              </div>
+              <div className="text-xs text-slate-500 mt-1">
+                100% Profits Retained for Setup & Loans
+              </div>
+            </div>
+
+            {/* Month 7+ Profit Split */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase text-slate-400">Month 7+ Profit Split</span>
+                <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                  <Percent className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-xl font-black text-slate-900 font-mono">
+                10% / 17% / 73%
+              </div>
+              <div className="text-xs text-slate-500 mt-1">
+                10% Investor • 17% Founder • 73% Shop
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Stakeholder Cards Grid */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  Stakeholders & Capital Breakdown
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Complete structure of loan providers, silent equity investor, and founder equity.
+                </p>
+              </div>
+              <button
+                onClick={() => setActivePlanTab('agreements')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold self-start sm:self-auto transition shadow-sm"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Sign All 3 Agreements</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Stakeholder 1: M. A. N. A. Silva */}
+              <div className="p-4 rounded-2xl border-2 border-blue-200 bg-blue-50/40 flex flex-col justify-between space-y-3 shadow-sm">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded-full uppercase">
+                      0% Loan
+                    </span>
+                    <span className="text-[11px] font-bold text-blue-900">Silva</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-slate-900 mt-2">M. A. N. A. Silva</h4>
+                  <div className="text-2xl font-black font-mono text-blue-700 mt-1">
+                    Rs. 600,000
+                  </div>
+                  <div className="text-xs text-slate-600 mt-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Interest:</span>
+                      <span className="font-bold text-emerald-700">0.0% (Zero)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Monthly Repayment:</span>
+                      <span className="font-bold font-mono">Rs. 50,000</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Target Term:</span>
+                      <span className="font-semibold">6 Months (300k) / 12 mo</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setActivePlanTab('agreements')}
+                  className="w-full py-2 bg-white hover:bg-blue-100 text-blue-800 text-xs font-bold rounded-xl border border-blue-300 transition text-center"
+                >
+                  Review Silva Agreement &rarr;
+                </button>
+              </div>
+
+              {/* Stakeholder 2: C. M. M. Dissanayake */}
+              <div className="p-4 rounded-2xl border-2 border-cyan-200 bg-cyan-50/40 flex flex-col justify-between space-y-3 shadow-sm">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-cyan-600 text-white text-[10px] font-bold rounded-full uppercase">
+                      0% Loan
+                    </span>
+                    <span className="text-[11px] font-bold text-cyan-900">Dissanayake</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-slate-900 mt-2">C. M. M. Dissanayake</h4>
+                  <div className="text-2xl font-black font-mono text-cyan-800 mt-1">
+                    Rs. 400,000
+                  </div>
+                  <div className="text-xs text-slate-600 mt-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Interest:</span>
+                      <span className="font-bold text-emerald-700">0.0% (Zero)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Monthly Repayment:</span>
+                      <span className="font-bold font-mono">Rs. 20,000</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Installments:</span>
+                      <span className="font-semibold">20 Equal Months</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setActivePlanTab('agreements')}
+                  className="w-full py-2 bg-white hover:bg-cyan-100 text-cyan-800 text-xs font-bold rounded-xl border border-cyan-300 transition text-center"
+                >
+                  Review Loan Agreement &rarr;
+                </button>
+              </div>
+
+              {/* Stakeholder 3: S. D. M. Dissanayake */}
+              <div className="p-4 rounded-2xl border-2 border-purple-200 bg-purple-50/40 flex flex-col justify-between space-y-3 shadow-sm">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-purple-600 text-white text-[10px] font-bold rounded-full uppercase">
+                      Equity Investor
+                    </span>
+                    <span className="text-[11px] font-bold text-purple-900">Investor</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-slate-900 mt-2">S. D. M. Dissanayake</h4>
+                  <div className="text-2xl font-black font-mono text-purple-700 mt-1">
+                    Rs. 1,000,000
+                  </div>
+                  <div className="text-xs text-slate-600 mt-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Role:</span>
+                      <span className="font-bold text-purple-800">Silent Partner</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Moratorium:</span>
+                      <span className="font-bold text-amber-700">6 Months Grace</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Profit Share (Month 7+):</span>
+                      <span className="font-bold text-emerald-700">10% Net Profit</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setActivePlanTab('agreements')}
+                  className="w-full py-2 bg-white hover:bg-purple-100 text-purple-800 text-xs font-bold rounded-xl border border-purple-300 transition text-center"
+                >
+                  Review Investor Agreement &rarr;
+                </button>
+              </div>
+
+              {/* Stakeholder 4: Founder Capital */}
+              <div className="p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 flex flex-col justify-between space-y-3 shadow-sm">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full uppercase">
+                      Founder Equity
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald-900">Owner</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-slate-900 mt-2">Founder (Self-Funded)</h4>
+                  <div className="text-2xl font-black font-mono text-emerald-700 mt-1">
+                    Rs. 700,000
+                  </div>
+                  <div className="text-xs text-slate-600 mt-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Contribution:</span>
+                      <span className="font-bold">3 + 4 Lakhs</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Founder Profit Draw:</span>
+                      <span className="font-bold text-emerald-700">17% Net Profit</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Retained Shop Reserve:</span>
+                      <span className="font-bold text-slate-800">73% Net Profit</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-2 bg-white/80 rounded-xl text-[11px] text-emerald-900 font-medium text-center border border-emerald-200">
+                  Full Operational Control
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Zero-Interest Advantage Box vs Commercial Bank */}
+          <div className="bg-gradient-to-r from-emerald-900 via-teal-950 to-slate-900 text-white p-6 rounded-3xl shadow-lg space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-400/30">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-black text-lg text-white">
+                    Zero-Interest Advantage: Over Rs. 440,000+ Saved
+                  </h4>
+                  <p className="text-xs text-slate-300">
+                    By securing friendly interest-free accommodation instead of a 15.5% bank loan, every rupee paid goes 100% to principal debt reduction.
+                  </p>
+                </div>
+              </div>
+              <span className="px-3 py-1 bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 text-xs font-bold rounded-full self-start sm:self-auto">
+                100% Equity Retention
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-2 border-t border-white/10">
+              <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                <span className="text-slate-400 block mb-1">Commercial Bank Loan (10 Lakhs @ 15.5%)</span>
+                <span className="text-base font-bold font-mono text-rose-300">
+                  ~Rs. 257,000 – Rs. 440,000
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Wasted purely on bank interest</span>
+              </div>
+
+              <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                <span className="text-slate-400 block mb-1">Friendly 0% Loans (10 Lakhs Combined)</span>
+                <span className="text-base font-bold font-mono text-emerald-400">
+                  Rs. 0.00
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">Zero interest, 100% principal payoff</span>
+              </div>
+
+              <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/30">
+                <span className="text-emerald-300 font-bold block mb-1">Net Cashflow In Your Pocket</span>
+                <span className="text-xl font-black font-mono text-emerald-300">
+                  +Rs. 440,000 Saved
+                </span>
+                <span className="text-[10px] text-emerald-200 block mt-0.5">Strengthens working capital directly</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Month 7+ Profit Distribution Simulator */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <Percent className="w-5 h-5 text-purple-600" />
+                  <span>Month 7+ Profit Distribution Simulator</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Test monthly dividend payouts after the 6-month gestation moratorium concludes.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 font-medium">Monthly Net Profit:</span>
+                <input
+                  type="number"
+                  step="10000"
+                  value={simulatedNetProfit}
+                  onChange={(e) => setSimulatedNetProfit(parseFloat(e.target.value) || 0)}
+                  className="w-32 px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm font-bold font-mono text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            <input
+              type="range"
+              min="50000"
+              max="400000"
+              step="5000"
+              value={simulatedNetProfit}
+              onChange={(e) => setSimulatedNetProfit(parseFloat(e.target.value))}
+              className="w-full accent-purple-600 cursor-pointer"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-2">
+              {/* Investor Share (10%) */}
+              <div className="p-4 rounded-xl border-2 border-purple-200 bg-purple-50/60 space-y-1">
+                <div className="flex justify-between items-center text-purple-900 font-bold">
+                  <span>S. D. M. Dissanayake (10%)</span>
+                  <span className="text-[10px] px-2 py-0.5 bg-purple-200 rounded-full">Silent Investor</span>
+                </div>
+                <div className="text-2xl font-black font-mono text-purple-800">
+                  Rs. {Math.round(simulatedNetProfit * 0.10).toLocaleString()}
+                </div>
+                <div className="text-[11px] text-purple-700">
+                  Monthly cash dividend credited to investor
+                </div>
+              </div>
+
+              {/* Founder Executive Draw (17%) */}
+              <div className="p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/60 space-y-1">
+                <div className="flex justify-between items-center text-emerald-900 font-bold">
+                  <span>Managing Founder (17%)</span>
+                  <span className="text-[10px] px-2 py-0.5 bg-emerald-200 rounded-full">Executive Draw</span>
+                </div>
+                <div className="text-2xl font-black font-mono text-emerald-800">
+                  Rs. {Math.round(simulatedNetProfit * 0.17).toLocaleString()}
+                </div>
+                <div className="text-[11px] text-emerald-700">
+                  Personal monthly profit distribution to owner
+                </div>
+              </div>
+
+              {/* Retained in Shop Account (73%) */}
+              <div className="p-4 rounded-xl border-2 border-slate-300 bg-slate-50 space-y-1">
+                <div className="flex justify-between items-center text-slate-800 font-bold">
+                  <span>Chathura Printers Shop Reserve (73%)</span>
+                  <span className="text-[10px] px-2 py-0.5 bg-slate-200 rounded-full">Retained Reserve</span>
+                </div>
+                <div className="text-2xl font-black font-mono text-slate-900">
+                  Rs. {Math.round(simulatedNetProfit * 0.73).toLocaleString()}
+                </div>
+                <div className="text-[11px] text-slate-600">
+                  Covers machinery wear reserve, emergency paper stock & loan service
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 12-Month Debt Repayment Schedule Table */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div>
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <CalendarCheck className="w-5 h-5 text-blue-600" />
+                <span>12-Month Debt Amortization & Milestone Timeline</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Tracking the combined Rs. 70,000 / month zero-interest principal paydown.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                    <th className="py-2.5 px-3">Month</th>
+                    <th className="py-2.5 px-3">Silva Loan (Rs. 50k)</th>
+                    <th className="py-2.5 px-3">Dissanayake Loan (Rs. 20k)</th>
+                    <th className="py-2.5 px-3">Total Monthly Outflow</th>
+                    <th className="py-2.5 px-3">Total Debt Repaid</th>
+                    <th className="py-2.5 px-3">Remaining Principal</th>
+                    <th className="py-2.5 px-3">Milestone / Phase</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-mono">
+                  {[
+                    { m: 'Month 1', s: 50000, d: 20000, repaid: 70000, rem: 930000, note: 'Gestation phase starts' },
+                    { m: 'Month 2', s: 50000, d: 20000, repaid: 140000, rem: 860000, note: 'Paper & stock roll-out' },
+                    { m: 'Month 3', s: 50000, d: 20000, repaid: 210000, rem: 790000, note: 'Commercial client ramp-up' },
+                    { m: 'Month 4', s: 50000, d: 20000, repaid: 280000, rem: 720000, note: 'Consistent counter cash flow' },
+                    { m: 'Month 5', s: 50000, d: 20000, repaid: 350000, rem: 650000, note: 'Pre-milestone review' },
+                    { m: 'Month 6', s: 50000, d: 20000, repaid: 420000, rem: 580000, note: '🎉 Silva 300k paid! Gestation ends' },
+                    { m: 'Month 7', s: 50000, d: 20000, repaid: 490000, rem: 510000, note: '🚀 Investor 10% profit sharing begins' },
+                    { m: 'Month 8', s: 50000, d: 20000, repaid: 560000, rem: 440000, note: 'Profit sharing active' },
+                    { m: 'Month 9', s: 50000, d: 20000, repaid: 630000, rem: 370000, note: 'Stable expansion' },
+                    { m: 'Month 10', s: 50000, d: 20000, repaid: 700000, rem: 300000, note: '70% total debt cleared' },
+                    { m: 'Month 11', s: 50000, d: 20000, repaid: 770000, rem: 230000, note: 'Near full settlement' },
+                    { m: 'Month 12', s: 50000, d: 20000, repaid: 840000, rem: 160000, note: '✨ Silva 600k 100% CLEARED! Only CMM left' },
+                  ].map((row, idx) => (
+                    <tr
+                      key={row.m}
+                      className={
+                        idx === 5
+                          ? 'bg-amber-50/70 font-semibold'
+                          : idx === 6
+                          ? 'bg-purple-50/70 font-semibold'
+                          : idx === 11
+                          ? 'bg-emerald-50/70 font-semibold'
+                          : 'hover:bg-slate-50'
+                      }
+                    >
+                      <td className="py-2 px-3 font-sans font-bold text-slate-800">{row.m}</td>
+                      <td className="py-2 px-3 text-blue-700">Rs. {row.s.toLocaleString()}</td>
+                      <td className="py-2 px-3 text-cyan-700">Rs. {row.d.toLocaleString()}</td>
+                      <td className="py-2 px-3 font-bold text-slate-900">Rs. {(row.s + row.d).toLocaleString()}</td>
+                      <td className="py-2 px-3 text-emerald-700">Rs. {row.repaid.toLocaleString()}</td>
+                      <td className="py-2 px-3 font-bold text-slate-700">Rs. {row.rem.toLocaleString()}</td>
+                      <td className="py-2 px-3 font-sans text-[11px] text-slate-600 font-medium">{row.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 2: LEGAL AGREEMENTS & SIGNATURES */}
+      {/* ------------------------------------------------------------- */}
+      {activePlanTab === 'agreements' && <FundingAgreementsView />}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TAB 3: MONTHLY CASH FLOW, SENSITIVITY & BREAK-EVEN */}
+      {/* ------------------------------------------------------------- */}
+      {activePlanTab === 'sensitivity' && (
+        <div className="space-y-6">
+          {/* TOP 4 SUMMARY STAT CARDS */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Loan Installment */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase text-slate-400">Monthly Loan Service</span>
             <div
@@ -745,7 +1260,7 @@ export const BusinessPlanView: React.FC = () => {
           </div>
         </div>
 
-        {/* CARD 3: FUTURE LOAN CALCULATOR & BANK CONFIRMATION */}
+        {/* CARD 3: DEBT SERVICE & LOAN REPAYMENT */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
@@ -753,48 +1268,103 @@ export const BusinessPlanView: React.FC = () => {
                 <Landmark className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-slate-900">Future Bank Loan</h3>
-                <p className="text-xs text-slate-500">Enter when ready; kept empty by default</p>
+                <h3 className="font-bold text-base text-slate-900">Monthly Debt Service</h3>
+                <p className="text-xs text-slate-500">
+                  {useSecuredLoans ? 'Active 0% Loans (Rs. 70,000/mo)' : 'Bank Loan Simulator'}
+                </p>
               </div>
             </div>
 
-            {/* Calculation Model Toggle */}
+            {/* Toggle between Friendly 0% Loans vs Bank Loan */}
             <div className="flex bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
               <button
-                onClick={() => setCalcModel('reducing')}
-                className={`px-2 py-1 rounded transition ${
-                  calcModel === 'reducing' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                onClick={() => setUseSecuredLoans(true)}
+                className={`px-2.5 py-1 rounded transition ${
+                  useSecuredLoans ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Reducing
+                0% Loans (70k)
               </button>
               <button
-                onClick={() => setCalcModel('flat')}
-                className={`px-2 py-1 rounded transition ${
-                  calcModel === 'flat' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                onClick={() => setUseSecuredLoans(false)}
+                className={`px-2.5 py-1 rounded transition ${
+                  !useSecuredLoans ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Flat
+                Bank Loan
               </button>
             </div>
           </div>
 
-          <div className="space-y-3">
-            {/* Loan Principal Input */}
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Loan Amount Taking (Rs.)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">Rs.</span>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="e.g. 2,800,000 (leave empty if no loan)"
-                  value={loanPrincipal}
-                  onChange={(e) => setLoanPrincipal(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-xl text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+          {useSecuredLoans ? (
+            <div className="space-y-3">
+              <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2 text-xs">
+                <div className="flex justify-between items-center text-emerald-950 font-bold">
+                  <span>Secured Friendly Loans (0% Interest):</span>
+                  <span className="font-mono text-base text-emerald-700">Rs. 70,000 / mo</span>
+                </div>
+                <div className="text-[11px] text-emerald-800 space-y-1 pt-1 border-t border-emerald-200/60">
+                  <div className="flex justify-between">
+                    <span>• M. A. N. A. Silva (Rs. 600k @ 0%):</span>
+                    <span className="font-mono font-bold">Rs. 50,000 / mo</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>• C. M. M. Dissanayake (Rs. 400k @ 0%):</span>
+                    <span className="font-mono font-bold">Rs. 20,000 / mo</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-emerald-700 font-semibold pt-1">
+                  ✓ 100% of installment goes to principal debt reduction. Zero bank interest charged.
+                </div>
+              </div>
+
+              <button
+                onClick={() => setActivePlanTab('funding')}
+                className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition text-center"
+              >
+                View Full Capital Breakdown &rarr;
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {/* Calculation Model Toggle for Bank Loan */}
+              <div className="flex justify-end">
+                <div className="flex bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
+                  <button
+                    onClick={() => setCalcModel('reducing')}
+                    className={`px-2 py-0.5 rounded transition ${
+                      calcModel === 'reducing' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                    }`}
+                  >
+                    Reducing
+                  </button>
+                  <button
+                    onClick={() => setCalcModel('flat')}
+                    className={`px-2 py-0.5 rounded transition ${
+                      calcModel === 'flat' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                    }`}
+                  >
+                    Flat
+                  </button>
+                </div>
+              </div>
+
+              {/* Loan Principal Input */}
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Loan Amount Taking (Rs.)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">Rs.</span>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="e.g. 2,800,000"
+                    value={loanPrincipal}
+                    onChange={(e) => setLoanPrincipal(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-xl text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
               <div className="flex gap-1.5 mt-1.5">
                 {[2000000, 2800000, 3500000].map((amt) => (
@@ -819,7 +1389,6 @@ export const BusinessPlanView: React.FC = () => {
                   </button>
                 )}
               </div>
-            </div>
 
             {/* Rate & Tenure */}
             <div className="grid grid-cols-2 gap-2">
@@ -920,8 +1489,9 @@ export const BusinessPlanView: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        )}
       </div>
+    </div>
 
       {/* INTERACTIVE GRAPH: BREAK-EVEN & PROFIT TRAJECTORY */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
@@ -1418,6 +1988,8 @@ export const BusinessPlanView: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
+      )}
     </div>
   );
 };
