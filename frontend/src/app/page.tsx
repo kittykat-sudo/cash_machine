@@ -3,26 +3,41 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '../components/Navbar';
 import { RegisterView } from '../components/RegisterView';
+import { OrdersView } from '../components/OrdersView';
+import { RevenueView } from '../components/RevenueView';
 import { CashbookView } from '../components/CashbookView';
 import { ExpensesView } from '../components/ExpensesView';
 import { ReportsView } from '../components/ReportsView';
 import { ItemsView } from '../components/ItemsView';
 import { BusinessPlanView } from '../components/BusinessPlanView';
 import { OpeningFloatModal } from '../components/OpeningFloatModal';
-import { fetchCashBalance } from '../services/api';
+import { WhatsAppConnectModal } from '../components/WhatsAppConnectModal';
+import { fetchCashBalance, fetchWhatsAppStatus } from '../services/api';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<
-    'register' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan'
+    'register' | 'orders' | 'revenue' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan'
   >('register');
   const [cashBalance, setCashBalance] = useState<number>(0);
   const [hasOpeningFloat, setHasOpeningFloat] = useState<boolean>(true);
   const [showFloatModal, setShowFloatModal] = useState<boolean>(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState<boolean>(false);
+  const [isWhatsAppConnected, setIsWhatsAppConnected] = useState<boolean>(false);
   const [cashierName, setCashierName] = useState<string>('Counter Cashier');
 
   useEffect(() => {
     updateBalance(true);
+    checkWhatsApp();
   }, []);
+
+  const checkWhatsApp = async () => {
+    try {
+      const res = await fetchWhatsAppStatus();
+      setIsWhatsAppConnected(!!res?.connected);
+    } catch {
+      // silent
+    }
+  };
 
   const updateBalance = async (isInitialLoad = false) => {
     try {
@@ -49,11 +64,19 @@ export default function Home() {
         cashierName={cashierName}
         hasOpeningFloat={hasOpeningFloat}
         onOpenDrawerModal={() => setShowFloatModal(true)}
+        onOpenWhatsAppModal={() => setShowWhatsAppModal(true)}
+        isWhatsAppConnected={isWhatsAppConnected}
       />
 
       <main className="flex-1 overflow-auto">
         {activeTab === 'register' && (
           <RegisterView onSaleCompleted={() => updateBalance(false)} />
+        )}
+        {activeTab === 'orders' && (
+          <OrdersView onNavigate={(tab) => setActiveTab(tab)} />
+        )}
+        {activeTab === 'revenue' && (
+          <RevenueView onNavigate={(tab) => setActiveTab(tab)} />
         )}
         {activeTab === 'cashbook' && (
           <CashbookView onBalanceUpdated={() => updateBalance(false)} />
@@ -61,7 +84,9 @@ export default function Home() {
         {activeTab === 'expenses' && (
           <ExpensesView onExpenseAdded={() => updateBalance(false)} />
         )}
-        {activeTab === 'reports' && <ReportsView />}
+        {activeTab === 'reports' && (
+          <ReportsView onNavigate={(tab) => setActiveTab(tab)} />
+        )}
         {activeTab === 'items' && <ItemsView />}
         {activeTab === 'businessPlan' && <BusinessPlanView />}
       </main>
@@ -71,6 +96,14 @@ export default function Home() {
         isOpen={showFloatModal}
         onClose={() => setShowFloatModal(false)}
         onFloatRecorded={() => updateBalance(false)}
+      />
+
+      <WhatsAppConnectModal
+        isOpen={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
+        onConnected={() => {
+          setIsWhatsAppConnected(true);
+        }}
       />
     </div>
   );

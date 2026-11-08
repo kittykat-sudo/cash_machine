@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Item, CartItem, PaymentMethod, Sale } from '../types';
+import { Item, CartItem, PaymentMethod, Sale, OrderStatus } from '../types';
 import { fetchItems, createSale } from '../services/api';
+import { sanitizeWhatsAppNumber, formatDisplayPhone } from '../services/whatsapp';
 import { KeypadModal } from './KeypadModal';
 import { ReceiptModal } from './ReceiptModal';
 import {
@@ -17,6 +18,10 @@ import {
   Banknote,
   Building2,
   RotateCcw,
+  User,
+  Phone,
+  Clock,
+  FileText,
 } from 'lucide-react';
 
 interface RegisterViewProps {
@@ -27,6 +32,11 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSaleCompleted }) =
   const [items, setItems] = useState<Item[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [customerName, setCustomerName] = useState<string>('');
+  const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [isJobOrder, setIsJobOrder] = useState<boolean>(false);
+  const [jobStatus, setJobStatus] = useState<OrderStatus>('pending');
+  const [jobNotes, setJobNotes] = useState<string>('');
   const [discount, setDiscount] = useState<number>(0);
   const [taxAmount, setTaxAmount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
@@ -140,6 +150,11 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSaleCompleted }) =
 
   const clearCart = () => {
     setCart([]);
+    setCustomerName('');
+    setCustomerPhone('');
+    setIsJobOrder(false);
+    setJobStatus('pending');
+    setJobNotes('');
     setDiscount(0);
     setTaxAmount(0);
   };
@@ -201,6 +216,10 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSaleCompleted }) =
         discount,
         tax_amount: taxAmount,
         payment_method: paymentMethod,
+        customer_name: customerName.trim() || null,
+        customer_phone: customerPhone.trim() || null,
+        order_status: isJobOrder ? jobStatus : 'completed',
+        notes: isJobOrder && jobNotes.trim() ? jobNotes.trim() : null,
       });
 
       setCompletedSale(created);
@@ -403,6 +422,129 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onSaleCompleted }) =
               <span className="font-semibold text-emerald-700 font-mono">
                 - Rs. {discount.toFixed(2)}
               </span>
+            </div>
+          </div>
+
+          {/* Customer Name & WhatsApp Phone */}
+          <div className="space-y-2">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                  Customer Name <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
+                {customerName && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomerName('')}
+                    className="text-[10px] text-slate-400 hover:text-rose-500 font-medium"
+                  >
+                    clear
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <User className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Walk-in / Customer name..."
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                />
+              </div>
+            </div>
+
+            {/* WhatsApp Mobile Number */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-emerald-600" />
+                  <span>WhatsApp Number</span>
+                </label>
+                {customerPhone && (
+                  <span className="text-[10px] font-mono text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                    {formatDisplayPhone(customerPhone)}
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <div className="absolute left-3 top-2 flex items-center pointer-events-none">
+                  <svg className="w-3.5 h-3.5 fill-emerald-600" viewBox="0 0 24 24">
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.529 1.831.815 2.791.815 3.182 0 5.768-2.586 5.768-5.767.001-3.18-2.585-5.766-5.768-5.766zm9.965 5.766c0 5.519-4.481 10-10 10-1.748 0-3.385-.45-4.819-1.238l-7.177 1.88 1.916-6.996c-.859-1.488-1.353-3.216-1.353-5.056 0-5.519 4.481-10 10-10 5.519 0 10 4.481 10 10z" />
+                  </svg>
+                </div>
+                <input
+                  type="tel"
+                  placeholder="e.g. 077 8683088"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                />
+              </div>
+            </div>
+
+            {/* Order Fulfillment Type Toggle (Instant vs Job Order) */}
+            <div className="pt-1">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                  Order Type & Progress
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-1 bg-slate-200/80 p-0.5 rounded-xl text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setIsJobOrder(false)}
+                  className={`py-1 rounded-lg transition ${
+                    !isJobOrder
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  ⚡ Instant Sale
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsJobOrder(true)}
+                  className={`py-1 rounded-lg transition ${
+                    isJobOrder
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  📁 Job Order
+                </button>
+              </div>
+
+              {/* Extra controls if Job Order */}
+              {isJobOrder && (
+                <div className="mt-2 p-2 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-emerald-950 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-emerald-700" />
+                      <span>Initial Progress:</span>
+                    </span>
+                    <select
+                      value={jobStatus}
+                      onChange={(e) => setJobStatus(e.target.value as OrderStatus)}
+                      className="bg-white border border-emerald-300 text-emerald-900 text-[11px] rounded-lg px-2 py-0.5 font-bold focus:outline-none"
+                    >
+                      <option value="pending">⏳ Queued / Waiting</option>
+                      <option value="in_progress">⚙️ Printing / Processing</option>
+                      <option value="ready">🎉 Ready for Pickup</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Special job instructions (e.g. 50 spiral sets)..."
+                      value={jobNotes}
+                      onChange={(e) => setJobNotes(e.target.value)}
+                      className="w-full px-2.5 py-1 bg-white border border-emerald-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -44,21 +44,36 @@ class SaleItemResponse(BaseModel):
     quantity: Decimal
     unit_price: Decimal
     line_total: Decimal
+    category: Optional[str] = "other"
 
     class Config:
         from_attributes = True
 
 class SaleCreate(BaseModel):
     cashier_id: Optional[int] = None
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    order_status: Optional[str] = "completed"
+    notes: Optional[str] = None
     items: List[SaleItemCreate]
     discount: Decimal = Decimal("0.00")
     tax_amount: Decimal = Decimal("0.00")
     payment_method: str = "cash"  # 'cash' | 'card' | 'bank'
 
+class SaleUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    order_status: Optional[str] = None
+    notes: Optional[str] = None
+
 class SaleResponse(BaseModel):
     id: int
     bill_number: str
     cashier_id: Optional[int]
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    order_status: str = "completed"
+    notes: Optional[str] = None
     subtotal: Decimal
     discount: Decimal
     tax_amount: Decimal
@@ -69,6 +84,23 @@ class SaleResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- WhatsApp Schemas ---
+class WhatsAppSendRequest(BaseModel):
+    message_type: str = "bill"  # 'bill' | 'status' | 'custom'
+    status: Optional[str] = None  # 'received' | 'in_progress' | 'ready' | 'completed'
+    phone: Optional[str] = None   # Override phone if desired
+    custom_message: Optional[str] = None
+    send_direct: bool = False     # Attempt sending via Cloud API / Twilio if credentials configured
+
+class WhatsAppSendResponse(BaseModel):
+    success: bool
+    phone: str
+    message: str
+    wa_link: str
+    sent_via_api: bool = False
+    details: Optional[str] = None
 
 
 # --- Expense Schemas ---

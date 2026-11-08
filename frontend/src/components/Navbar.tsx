@@ -1,15 +1,17 @@
 'use client';
 
 import React from 'react';
-import { ShoppingCart, BookOpen, Receipt, BarChart3, Settings2, Wallet, Landmark } from 'lucide-react';
+import { ShoppingCart, TrendingUp, BookOpen, Receipt, BarChart3, Settings2, Wallet, Landmark, Clock } from 'lucide-react';
 
 interface NavbarProps {
-  activeTab: 'register' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan';
-  setActiveTab: (tab: 'register' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan') => void;
+  activeTab: 'register' | 'orders' | 'revenue' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan';
+  setActiveTab: (tab: 'register' | 'orders' | 'revenue' | 'cashbook' | 'expenses' | 'reports' | 'items' | 'businessPlan') => void;
   cashBalance: number;
   cashierName: string;
   hasOpeningFloat: boolean;
   onOpenDrawerModal: () => void;
+  onOpenWhatsAppModal?: () => void;
+  isWhatsAppConnected?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,9 +21,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   cashierName,
   hasOpeningFloat,
   onOpenDrawerModal,
+  onOpenWhatsAppModal,
+  isWhatsAppConnected,
 }) => {
   const tabs = [
     { id: 'register', label: 'Cash Register', icon: ShoppingCart },
+    { id: 'orders', label: 'Orders & WhatsApp', icon: Clock },
+    { id: 'revenue', label: 'Revenue', icon: TrendingUp },
     { id: 'cashbook', label: 'Cashbook', icon: BookOpen },
     { id: 'expenses', label: 'Expenses', icon: Receipt },
     { id: 'reports', label: 'Day Summary & Profit', icon: BarChart3 },
@@ -93,6 +99,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
           </button>
+
+          {onOpenWhatsAppModal && (
+            <button
+              onClick={onOpenWhatsAppModal}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition shadow-sm ${
+                isWhatsAppConnected
+                  ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/60'
+                  : 'bg-amber-950/60 border-amber-500/60 text-amber-300 hover:bg-amber-900/60'
+              }`}
+              title={isWhatsAppConnected ? 'WhatsApp 0720129297 Connected' : 'Click to Link WhatsApp 0720129297'}
+            >
+              <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.529 1.831.815 2.791.815 3.182 0 5.768-2.586 5.768-5.767.001-3.18-2.585-5.766-5.768-5.766zm9.965 5.766c0 5.519-4.481 10-10 10-1.748 0-3.385-.45-4.819-1.238l-7.177 1.88 1.916-6.996c-.859-1.488-1.353-3.216-1.353-5.056 0-5.519 4.481-10 10-10 5.519 0 10 4.481 10 10z" />
+              </svg>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${isWhatsAppConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                <span className="hidden md:inline">{isWhatsAppConnected ? '0720129297' : 'Link WhatsApp'}</span>
+              </div>
+            </button>
+          )}
 
           <div className="hidden sm:block text-right">
             <div className="text-xs font-semibold text-slate-200">{cashierName}</div>

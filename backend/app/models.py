@@ -38,6 +38,10 @@ class Sale(Base):
     id = Column(Integer, primary_key=True, index=True)
     bill_number = Column(Text, unique=True, nullable=False, index=True)
     cashier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    customer_name = Column(Text, nullable=True)
+    customer_phone = Column(Text, nullable=True)  # WhatsApp / Mobile number
+    order_status = Column(Text, nullable=False, default="completed")  # 'pending' | 'in_progress' | 'ready' | 'completed' | 'cancelled'
+    notes = Column(Text, nullable=True)
     subtotal = Column(Numeric(12, 2), nullable=False)
     discount = Column(Numeric(12, 2), nullable=False, default=0)
     tax_amount = Column(Numeric(12, 2), nullable=False, default=0)
@@ -62,6 +66,11 @@ class SaleItem(Base):
 
     sale = relationship("Sale", back_populates="items")
     item = relationship("Item")
+
+    @property
+    def category(self) -> str:
+        return self.item.category if self.item and self.item.category else "other"
+
 
 
 class Expense(Base):
